@@ -21,7 +21,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    NSArray *tagsArray = @[@"90后", @"3年以上开发经验", @"iOS开发", @"跨平台开发", @"UI设计", @"交互设计", @"Sketch", @"Object-c", @"JS", @"Ruby", @"React", @"ReactNative", @"ExpressJS", @"开源"];
+    NSArray *tagsArray = @[@"90后", @"3年以上开发经验", @"iOS开发", @"跨平台开发", @"UI设计", @"交互设计", @"Sketch", @"Objective-c", @"JS", @"Ruby", @"React", @"ReactNative", @"ExpressJS", @"开源"];
     [self createTagsWithArray:tagsArray];
 }
 
