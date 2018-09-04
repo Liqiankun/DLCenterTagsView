@@ -26,53 +26,58 @@
 }
 
 -(void)createTagsWithArray:(NSArray *)tagsArray {
-    NSMutableArray *groupTagArray = [[NSMutableArray alloc] init];
-    NSMutableArray<NSNumber *> *widthArray = [[NSMutableArray alloc] init];
-    CGFloat labelSpace = 10;
-    CGFloat lastWidth = 0;
-    int lastIndex = 0;
-    
-    NSMutableArray *smallTagsArray = [[NSMutableArray alloc] init];
-    UIFont *font = [UIFont systemFontOfSize:16];
-    for (int tagIndex = 0; tagIndex < tagsArray.count; tagIndex ++ ) {
-        NSString *tagString =tagsArray[tagIndex];
-        CGFloat tagWidth = [tagString sizeWithAttributes:@{NSFontAttributeName: font}].width + 15;
-        if (tagWidth + lastIndex * labelSpace + lastWidth >= SCREEN_WIDTH - 60) {
-            [widthArray addObject:[NSNumber numberWithFloat:lastWidth]];
-            lastWidth = tagWidth;
-            [groupTagArray addObject:smallTagsArray];
-            smallTagsArray = [[NSMutableArray alloc] init];
-            [smallTagsArray addObject:tagString];
-            if (tagIndex == tagsArray.count - 1) {
-                [groupTagArray addObject:smallTagsArray];
-                [widthArray addObject:[NSNumber numberWithFloat:lastWidth]];
-            }
-            lastIndex = 1;
-            
-        } else {
-            lastWidth = lastWidth + tagWidth;
-            [smallTagsArray addObject:tagString];
-            if (tagIndex == tagsArray.count - 1) {
-                [groupTagArray addObject:smallTagsArray];
-                [widthArray addObject:[NSNumber numberWithFloat:lastWidth]];
-            }
-            lastIndex ++;
-        }
-    }
-    
-    for (int arrayIndex = 0; arrayIndex < groupTagArray.count; arrayIndex ++) {
-        NSArray *smallTagArray = groupTagArray[arrayIndex];
-        CGFloat width = [widthArray[arrayIndex] floatValue];
-        CGFloat lastTagWidth = (SCREEN_WIDTH -  width - (smallTagArray.count - 1) * 10) / 2.0;
-        for (int index = 0; index < smallTagArray.count; index ++) {
-            NSString *tagString = smallTagArray[index];
+    dispatch_async(dispatch_queue_create("createTags.com", NULL), ^{
+        NSMutableArray *groupTagArray = [[NSMutableArray alloc] init];
+        NSMutableArray<NSNumber *> *widthArray = [[NSMutableArray alloc] init];
+        CGFloat labelSpace = 10;
+        CGFloat lastWidth = 0;
+        int lastIndex = 0;
+        
+        NSMutableArray *smallTagsArray = [[NSMutableArray alloc] init];
+        UIFont *font = [UIFont systemFontOfSize:16];
+        for (int tagIndex = 0; tagIndex < tagsArray.count; tagIndex ++ ) {
+            NSString *tagString =tagsArray[tagIndex];
             CGFloat tagWidth = [tagString sizeWithAttributes:@{NSFontAttributeName: font}].width + 15;
-            UILabel *label = [self createTagLabel:tagString];
-            label.frame = CGRectMake(lastTagWidth + index * 10, arrayIndex * (font.lineHeight + 10 + 15) + 80, tagWidth, font.lineHeight + 10);
-            [self.view addSubview:label];
-            lastTagWidth = lastTagWidth + tagWidth;
+            if (tagWidth + lastIndex * labelSpace + lastWidth >= SCREEN_WIDTH - 60) {
+                [widthArray addObject:[NSNumber numberWithFloat:lastWidth]];
+                lastWidth = tagWidth;
+                [groupTagArray addObject:smallTagsArray];
+                smallTagsArray = [[NSMutableArray alloc] init];
+                [smallTagsArray addObject:tagString];
+                if (tagIndex == tagsArray.count - 1) {
+                    [groupTagArray addObject:smallTagsArray];
+                    [widthArray addObject:[NSNumber numberWithFloat:lastWidth]];
+                }
+                lastIndex = 1;
+            } else {
+                lastWidth = lastWidth + tagWidth;
+                [smallTagsArray addObject:tagString];
+                if (tagIndex == tagsArray.count - 1) {
+                    [groupTagArray addObject:smallTagsArray];
+                    [widthArray addObject:[NSNumber numberWithFloat:lastWidth]];
+                }
+                lastIndex ++;
+            }
         }
-    }
+        
+        for (int arrayIndex = 0; arrayIndex < groupTagArray.count; arrayIndex ++) {
+            NSArray *smallTagArray = groupTagArray[arrayIndex];
+            CGFloat width = [widthArray[arrayIndex] floatValue];
+            __block CGFloat lastTagWidth = (SCREEN_WIDTH -  width - (smallTagArray.count - 1) * 10) / 2.0;
+            for (int index = 0; index < smallTagArray.count; index ++) {
+                @autoreleasepool {
+                    NSString *tagString = smallTagArray[index];
+                    CGFloat tagWidth = [tagString sizeWithAttributes:@{NSFontAttributeName: font}].width + 15;
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        UILabel *label = [self createTagLabel:tagString];
+                        label.frame = CGRectMake(lastTagWidth + index * 10, arrayIndex * (font.lineHeight + 10 + 15) + 80, tagWidth, font.lineHeight + 10);
+                        [self.view addSubview:label];
+                        lastTagWidth = lastTagWidth + tagWidth;
+                    });
+                }
+            }
+        }
+    });
 }
 
 -(UILabel *)createTagLabel:(NSString *)text {
