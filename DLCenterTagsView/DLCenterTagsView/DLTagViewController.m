@@ -8,6 +8,7 @@
 
 #import "DLTagViewController.h"
 #import "UIColor+HexString.h"
+#import <mach/mach.h>
 
 #define SCREEN_WIDTH [UIScreen mainScreen].bounds.size.width
 #define SCREEN_height [UIScreen mainScreen].bounds.size.height
@@ -17,6 +18,14 @@
 @end
 
 @implementation DLTagViewController
+
+double getMemoryUsage(void) {
+    struct task_basic_info info;
+    mach_msg_type_number_t size = sizeof(info);
+    kern_return_t kerr = task_info(mach_task_self_, TASK_BASIC_INFO, (task_info_t)&info, &size);
+    double memoryUsageInMB = kerr == KERN_SUCCESS ? (info.resident_size / 1024.0 / 1024.0) : 0.0;
+    return memoryUsageInMB;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -65,16 +74,14 @@
             CGFloat width = [widthArray[arrayIndex] floatValue];
             __block CGFloat lastTagWidth = (SCREEN_WIDTH -  width - (smallTagArray.count - 1) * 10) / 2.0;
             for (int index = 0; index < smallTagArray.count; index ++) {
-                @autoreleasepool {
-                    NSString *tagString = smallTagArray[index];
-                    CGFloat tagWidth = [tagString sizeWithAttributes:@{NSFontAttributeName: font}].width + 15;
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        UILabel *label = [self createTagLabel:tagString];
-                        label.frame = CGRectMake(lastTagWidth + index * 10, arrayIndex * (font.lineHeight + 10 + 15) + 80, tagWidth, font.lineHeight + 10);
-                        [self.view addSubview:label];
-                        lastTagWidth = lastTagWidth + tagWidth;
-                    });
-                }
+                NSString *tagString = smallTagArray[index];
+                CGFloat tagWidth = [tagString sizeWithAttributes:@{NSFontAttributeName: font}].width + 15;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    UILabel *label = [self createTagLabel:tagString];
+                    label.frame = CGRectMake(lastTagWidth + index * 10, arrayIndex * (font.lineHeight + 10 + 15) + 80, tagWidth, font.lineHeight + 10);
+                    [self.view addSubview:label];
+                    lastTagWidth = lastTagWidth + tagWidth;
+                });
             }
         }
     });
